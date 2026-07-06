@@ -1,0 +1,634 @@
+<title>NeuroCore — One Mind, Three Worlds</title>
+<style>
+  :root {
+    --ground: #11111c;
+    --surface: #191b2b;
+    --surface-2: #20223a;
+    --text: #ece7dc;
+    --text-dim: #9d98ac;
+    --text-faint: #6b6780;
+    --soma: #c6733e;
+    --soma-dim: #8a5535;
+    --world: #4fa39d;
+    --world-dim: #396f6c;
+    --rule: #2a2c44;
+    --rule-soft: #21233a;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--world); text-decoration-color: var(--world-dim); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--world);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1, h2, h3 { font-family: var(--serif); text-wrap: balance; margin: 0; font-weight: 500; }
+  p { margin: 0 0 1.1em; }
+  p:last-child { margin-bottom: 0; }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* -------- side nav -------- */
+  nav.toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 3.5rem 1.5rem 3rem 2rem;
+    border-right: 1px solid var(--rule-soft);
+  }
+  nav.toc .mark {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    display: block;
+  }
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  nav.toc a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: block;
+    border-left: 2px solid transparent;
+    padding-left: 0.75rem;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  nav.toc a:hover, nav.toc a:focus-visible { color: var(--text); border-color: var(--world-dim); }
+  nav.toc .num { font-family: var(--mono); color: var(--text-faint); margin-right: 0.5em; font-size: 0.75em; }
+
+  main { padding: 0 3rem 6rem; min-width: 0; }
+
+  /* -------- title block -------- */
+  .titleblock {
+    padding: 5rem 0 4rem;
+    border-bottom: 1px solid var(--rule);
+    max-width: 42rem;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--soma);
+    display: block;
+    margin-bottom: 1.25rem;
+  }
+  .titleblock h1 {
+    font-size: clamp(2.3rem, 4.4vw, 3.1rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+  }
+  .titleblock .thesis {
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    max-width: 34rem;
+    line-height: 1.55;
+  }
+  .titleblock .meta {
+    margin-top: 2rem;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    display: flex;
+    gap: 1.75rem;
+    flex-wrap: wrap;
+  }
+  .titleblock .meta b { color: var(--text-dim); font-weight: 500; }
+
+  /* -------- sections -------- */
+  section { padding: 4.5rem 0; border-bottom: 1px solid var(--rule); max-width: 44rem; scroll-margin-top: 2rem; }
+  section:last-of-type { border-bottom: none; }
+  section > .num-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.9rem;
+  }
+  section h2 { font-size: 1.85rem; margin-bottom: 1.4rem; }
+  section h3 { font-size: 1.2rem; margin: 2.2rem 0 0.8rem; color: var(--text); }
+  section .lede { font-size: 1.08rem; color: var(--text-dim); margin-bottom: 1.6rem; }
+
+  .prose { max-width: 60ch; }
+  .prose p { color: var(--text); }
+  .prose code, p code, li code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  /* -------- diagrams -------- */
+  figure { margin: 2.2rem 0; }
+  figure.wide { max-width: 46rem; }
+  figcaption {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    margin-top: 0.8rem;
+    max-width: 60ch;
+  }
+  .diagram-frame {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1.5rem;
+    overflow-x: auto;
+  }
+
+  /* -------- doctrine cards -------- */
+  .doctrine-grid { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.6rem; }
+  .doctrine {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--soma-dim);
+    border-radius: 4px;
+    padding: 1.1rem 1.4rem;
+  }
+  .doctrine.world-flavored { border-left-color: var(--world-dim); }
+  .doctrine h4 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.02rem;
+    margin: 0 0 0.4rem;
+    color: var(--text);
+  }
+  .doctrine p { color: var(--text-dim); font-size: 0.95rem; margin: 0; }
+
+  /* -------- world cards (the three substrates) -------- */
+  .worlds { display: flex; flex-direction: column; gap: 1.4rem; margin-top: 1.8rem; }
+  .world-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1.6rem 1.8rem;
+    position: relative;
+  }
+  .world-card .tag {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2em 0.6em;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 0.9rem;
+  }
+  .world-card.proving .tag { background: rgba(198,115,62,0.16); color: var(--soma); }
+  .world-card.live .tag { background: rgba(79,163,157,0.16); color: var(--world); }
+  .world-card.target .tag { background: var(--surface-2); color: var(--text-dim); border: 1px dashed var(--text-faint); }
+  .world-card h4 { font-family: var(--serif); font-size: 1.3rem; margin: 0 0 0.6rem; }
+  .world-card p { color: var(--text-dim); font-size: 0.97rem; }
+  .world-card .stat {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    background: var(--surface-2);
+    display: inline-block;
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px;
+    margin-top: 0.8rem;
+  }
+  .world-card .stat b { color: var(--world); font-variant-numeric: tabular-nums; }
+
+  /* -------- stack list (support infra) -------- */
+  .stack-list { display: flex; flex-direction: column; gap: 0; margin-top: 1.6rem; }
+  .stack-item {
+    display: grid;
+    grid-template-columns: 9rem minmax(0,1fr);
+    gap: 1.5rem;
+    padding: 1.1rem 0;
+    border-top: 1px solid var(--rule-soft);
+  }
+  .stack-item:first-child { border-top: none; }
+  .stack-item .name { font-family: var(--mono); font-size: 0.85rem; color: var(--soma); padding-top: 0.15rem; }
+  .stack-item p { color: var(--text-dim); font-size: 0.95rem; margin: 0; }
+
+  /* -------- roadmap -------- */
+  .roadmap { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1.6rem; }
+  .roadmap-item { display: flex; gap: 1rem; align-items: baseline; }
+  .roadmap-item .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-faint); flex-shrink: 0;
+    transform: translateY(-2px);
+  }
+  .roadmap-item.next .dot { background: var(--world); }
+  .roadmap-item p { color: var(--text-dim); font-size: 0.97rem; }
+  .roadmap-item b { color: var(--text); font-weight: 500; }
+
+  /* -------- closing -------- */
+  .closing {
+    max-width: 44rem;
+    padding: 4.5rem 0 6rem;
+  }
+  .closing p {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .closing .sig {
+    margin-top: 2rem;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+  }
+
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--rule); padding: 2rem 1.5rem; }
+    main { padding: 0 1.5rem 4rem; }
+    .titleblock { padding: 3rem 0 2.5rem; }
+    .stack-item { grid-template-columns: 1fr; gap: 0.3rem; }
+  }
+</style>
+
+<div class="shell">
+  <nav class="toc" aria-label="Sections">
+    <span class="mark">NeuroCore &mdash; Manifesto</span>
+    <ol>
+      <li><a href="#thesis"><span class="num">00</span>Thesis</a></li>
+      <li><a href="#engine"><span class="num">01</span>The Engine</a></li>
+      <li><a href="#doctrine"><span class="num">02</span>The Doctrine</a></li>
+      <li><a href="#worlds"><span class="num">03</span>Three Worlds</a></li>
+      <li><a href="#stack"><span class="num">04</span>The Support Stack</a></li>
+      <li><a href="#roadmap"><span class="num">05</span>Where It's Going</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="titleblock">
+      <span class="eyebrow">Architectural Manifesto &middot; 2026-07-06</span>
+      <h1>One Mind, Three Worlds</h1>
+      <p class="thesis">A single learning brain, built once and proven hard in a disposable
+      world, carried with confidence into bodies of increasing consequence &mdash; until it can
+      finally see, and one day act, inside one it was never told about in advance.</p>
+      <div class="meta">
+        <span><b>Engine</b> NeuroCore (HDC + LNN + VSA)</span>
+        <span><b>Proven</b> Screeps, 87.9% prequential</span>
+        <span><b>Live</b> Timberborn, Schema 7</span>
+        <span><b>Target</b> Minecraft, embodied</span>
+      </div>
+    </div>
+
+    <section id="thesis">
+      <span class="num-eyebrow">00 &mdash; Thesis</span>
+      <h2>The brain is the invariant. The body is the experiment.</h2>
+      <div class="prose">
+        <p class="lede">Every other decision in this project follows from one architectural
+        commitment: build <em>one</em> game-agnostic learning engine &mdash; NeuroCore &mdash;
+        and port it, unmodified at its core, across substrates that get progressively closer to
+        a body that actually has to live in a world.</p>
+        <p>The engine started in <a href="#worlds">Screeps</a>, a JavaScript colony sandbox
+        cheap enough to break daily and disposable enough that failure is data, not damage. It
+        was hardened there through real incidents &mdash; spawn deadlocks, poisoned learned
+        thresholds, gradient pole-lock, off-policy control collapsing on contact with reality
+        &mdash; until it earned <b>87.9% prequential forecast accuracy</b> against a naive
+        persistence baseline, on a live colony it had never seen tuned in advance. That number is
+        the reason anything downstream gets built with confidence instead of hope.</p>
+        <p>From there it was ported, not rewritten, into <a href="#worlds">Timberborn</a>, a
+        commercial C&#35; game reached through a mod &mdash; the first time the brain had to run
+        inside somebody else's process, on somebody else's clock, with bit-for-bit parity to its
+        JavaScript ancestor proven in tests before a single retina was drawn. And the whole
+        arc points at <a href="#worlds">Minecraft</a>, where the brain stops reading a game's
+        internal memory and starts looking at a rendered screen instead &mdash; the point at
+        which "shadow observer" finally becomes "embodied agent."</p>
+      </div>
+    </section>
+
+    <section id="engine">
+      <span class="num-eyebrow">01 &mdash; The Engine</span>
+      <h2>NeuroCore</h2>
+      <div class="prose">
+        <p class="lede">A closed loop of five organs, sharing one frozen coordinate system.
+        Every game-specific mod is a <em>retina</em> written against this engine &mdash; never
+        the other way around.</p>
+      </div>
+
+      <figure class="wide">
+        <div class="diagram-frame">
+          <svg viewBox="0 0 720 300" role="img" aria-labelledby="engine-svg-title" xmlns="http://www.w3.org/2000/svg">
+            <title id="engine-svg-title">The closed recall loop: encode, recall, gate, reinforce, consolidate</title>
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#6b6780" />
+              </marker>
+            </defs>
+            <!-- HDC substrate base layer -->
+            <rect x="20" y="230" width="680" height="50" rx="5" fill="#20223a" stroke="#2a2c44" />
+            <text x="40" y="260" font-family="ui-monospace, Consolas, monospace" font-size="13" fill="#ece7dc">HDC substrate &mdash; SeededVector / Bind / Bundle / Hamming distance</text>
+
+            <!-- Vault + Fuzzy -->
+            <rect x="20" y="160" width="330" height="55" rx="5" fill="#191b2b" stroke="#8a5535" stroke-width="1.5" />
+            <text x="38" y="182" font-family="Iowan Old Style, Georgia, serif" font-size="15" fill="#c6733e">Vault</text>
+            <text x="38" y="202" font-family="ui-monospace, Consolas, monospace" font-size="11.5" fill="#9d98ac">exact memories &middot; transitions &middot; vaultPredict</text>
+
+            <rect x="370" y="160" width="330" height="55" rx="5" fill="#191b2b" stroke="#8a5535" stroke-width="1.5" />
+            <text x="388" y="182" font-family="Iowan Old Style, Georgia, serif" font-size="15" fill="#c6733e">FuzzyMemory</text>
+            <text x="388" y="202" font-family="ui-monospace, Consolas, monospace" font-size="11.5" fill="#9d98ac">trunk templates &middot; branch hooks &middot; usage-decay prune</text>
+
+            <!-- LNN -->
+            <rect x="20" y="90" width="330" height="55" rx="5" fill="#191b2b" stroke="#396f6c" stroke-width="1.5" />
+            <text x="38" y="112" font-family="Iowan Old Style, Georgia, serif" font-size="15" fill="#4fa39d">LNN</text>
+            <text x="38" y="132" font-family="ui-monospace, Consolas, monospace" font-size="11.5" fill="#9d98ac">reservoir &#43; readout &middot; shear/foam plasticity damper</text>
+
+            <!-- Claustrum -->
+            <rect x="370" y="90" width="330" height="55" rx="5" fill="#191b2b" stroke="#396f6c" stroke-width="1.5" />
+            <text x="388" y="112" font-family="Iowan Old Style, Georgia, serif" font-size="15" fill="#4fa39d">Claustrum</text>
+            <text x="388" y="132" font-family="ui-monospace, Consolas, monospace" font-size="11.5" fill="#9d98ac">coherence gate &middot; tempers surprise &amp; consolidation</text>
+
+            <!-- Sleep / consolidation, top -->
+            <rect x="20" y="20" width="680" height="50" rx="5" fill="#20223a" stroke="#2a2c44" />
+            <text x="40" y="50" font-family="ui-monospace, Consolas, monospace" font-size="13" fill="#ece7dc">Consolidation &mdash; diegetic sleep trigger, offline merge / prune / promote</text>
+
+            <!-- connecting arrows (recall loop) -->
+            <line x1="185" y1="230" x2="185" y2="215" stroke="#6b6780" stroke-width="1.5" marker-end="url(#arrow)" />
+            <line x1="535" y1="230" x2="535" y2="215" stroke="#6b6780" stroke-width="1.5" marker-end="url(#arrow)" />
+            <line x1="185" y1="160" x2="185" y2="145" stroke="#6b6780" stroke-width="1.5" marker-end="url(#arrow)" />
+            <line x1="535" y1="160" x2="535" y2="145" stroke="#6b6780" stroke-width="1.5" marker-end="url(#arrow)" />
+            <line x1="185" y1="90" x2="185" y2="70" stroke="#6b6780" stroke-width="1.5" marker-end="url(#arrow)" />
+            <line x1="535" y1="90" x2="535" y2="70" stroke="#6b6780" stroke-width="1.5" marker-end="url(#arrow)" />
+          </svg>
+        </div>
+        <figcaption>encode &rarr; recall (novelty = Hamming distance) &rarr; reinforce / hook / new
+        &rarr; feeds the next recall. Copper organs operate on stored state; teal organs judge and
+        temper it &mdash; the same soma/world duality the encoding itself uses.</figcaption>
+      </figure>
+
+      <h3>The frozen coordinate frame</h3>
+      <div class="prose">
+        <p>Every stored vector is a pure function of a label, regenerated through one seeded
+        PRNG stream. Change the seed, the dimension, or the hashing constants after any memory
+        exists, and every stored vector silently means something else &mdash; instant amnesia,
+        dressed as a working program. The seed is a serialization format, not a tuning
+        parameter, and it is the reason <code>SeededVector(x, bigDim)[0..smallDim] ==
+        SeededVector(x, smallDim)</code> holds exactly &mdash; growing the vocabulary is always
+        safe; touching the frame never is.</p>
+        <p>Dimension itself is deliberately <em>not</em> universal &mdash; there is no single
+        canonical hypervector size. <code>SeededVector</code> carries no game-specific salt, so
+        each port picks its own geometry with zero cross-port cost: 500 on the Screeps ladder,
+        1000 on its private sandbox and lab servers, 12,500 soma &#43; 1,250 world in
+        Timberborn. A number quoted as "the" dimension is a stale or borrowed figure, not a
+        property of the architecture.</p>
+      </div>
+
+      <h3>Soma and world</h3>
+      <div class="prose">
+        <p>Every encoding splits into two hemispheres &mdash; <b style="color:var(--soma)">soma</b>,
+        the internal/economic state, and <b style="color:var(--world)">world</b>, the external/
+        situational one. It is a distinction the manifesto borrows for itself: mechanisms that
+        operate on stored memory read copper; mechanisms that judge, gate, or temper it read teal.</p>
+      </div>
+    </section>
+
+    <section id="doctrine">
+      <span class="num-eyebrow">02 &mdash; The Doctrine</span>
+      <h2>Laws learned the expensive way</h2>
+      <div class="prose">
+        <p class="lede">None of these were decided in the abstract. Each one is the residue of
+        a real incident &mdash; a colony that starved, a readout that pole-locked, a shadow
+        predictor that looked brilliant off-policy and collapsed the moment it touched the
+        wheel.</p>
+      </div>
+
+      <div class="doctrine-grid">
+        <div class="doctrine">
+          <h4>A learned layer hands off above the floor, never below it</h4>
+          <p>The spawn arbiter's first live attempt failed in ~550 ticks: its shadow accuracy
+          never transferred, because the deterministic floor beneath it had been silently
+          satisfying the colony's needs the whole time it was "learning." The fix generalizes
+          past Screeps &mdash; a learned organ governs only the surplus above a reflex floor,
+          never the floor itself.</p>
+        </div>
+        <div class="doctrine world-flavored">
+          <h4>Every predictor is scored against a naive baseline, honestly, forever</h4>
+          <p>Persistence (predict no change) and base-rate (predict the majority class) run
+          alongside every learner. A target that can't beat them at n&ge;500 gets demoted or
+          dropped &mdash; not defended. This is also how the doctrine catches its own lies: an
+          episodic matrix that looked 87% correct in aggregate was measured at 0% in the wild
+          until label noise and an over-wide resemblance kernel were found and fixed.</p>
+        </div>
+        <div class="doctrine">
+          <h4>Targets must be regime-onset events with lead time, never rare-flat labels</h4>
+          <p>A target that is almost always constant makes naive persistence unbeatable by
+          construction. An early Screeps threat-forecast died this way; every predictive target
+          shipped since is checked against the failure before it is trusted as a real "is this
+          learning" instrument.</p>
+        </div>
+        <div class="doctrine world-flavored">
+          <h4>Persist as paged, fixed-stride binary &mdash; never a growing JSON blob</h4>
+          <p>A monolithic save file that must be fully reparsed to reconstruct context does not
+          scale, and it was measured causing real stutter. The standing target, Minecraft-region-
+          style: file size and per-save I/O are a function of capacity, never of ticks played.
+          The longer arc: eventually the hyperdimensional memory itself should <em>be</em> the
+          context a session reads, not a JSON transcript of it.</p>
+        </div>
+        <div class="doctrine">
+          <h4>Reason in ticks, never wall-clock</h4>
+          <p>Speed multipliers and pauses make real-time a lie the simulation doesn't share.
+          Fill rates, decay windows, and cadence are stated in ticks, and only converted to a
+          clock when a session's actual pace is known and given.</p>
+        </div>
+        <div class="doctrine world-flavored">
+          <h4>Chunk the encoding; never bundle a mega-vector</h4>
+          <p>Folding every attribute into one fixed-width bundle dilutes each attribute's
+          marginal Hamming contribution by roughly <code>1/&radic;k</code>. Disjoint per-chunk
+          bundles keep single-attribute change visible &mdash; and once a chunk map ships, it is
+          an era contract: locked, never reordered.</p>
+        </div>
+        <div class="doctrine">
+          <h4>Vigilance thresholds are derived, never scaled from an old draft</h4>
+          <p>Every geometry change gets its own scratch enumeration against the real primitives
+          &mdash; gold-pin a known vector, sweep single- and cross-chunk flips, read the actual
+          Hamming bands. An early guess at a flora-dying threshold was uselessly wrong by an
+          order of magnitude; thresholds are earned from data, never assumed to transfer.</p>
+        </div>
+        <div class="doctrine world-flavored">
+          <h4>Knowledge integrity binds every collaborator, Claude included</h4>
+          <p>No plausible-sounding fill-in for a gap. Every claim is labeled, at least
+          internally, as <b>verified</b> (checked against real code, docs, or a live source),
+          <b>estimated</b> (a reasonable guess, named as one), or <b>unknown</b> (stopped on,
+          researched, or asked about &mdash; never guessed past). This is not a courtesy; it has
+          already caught real errors inside this project &mdash; a manual Ollama flag cited from
+          a pull request that was in fact rejected, a model size that doesn't exist in any
+          released family &mdash; before either one cost real time. Any collaborator, human or
+          model, is held to it precisely because fluent language is not evidence of a checked
+          fact.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="worlds">
+      <span class="num-eyebrow">03 &mdash; Three Worlds</span>
+      <h2>The arc</h2>
+      <div class="prose">
+        <p class="lede">One engine, three bodies of escalating consequence &mdash; each phase
+        exists to earn the confidence the next one spends.</p>
+      </div>
+
+      <div class="worlds">
+        <div class="world-card proving">
+          <span class="tag">Proving ground &middot; live</span>
+          <h4>Screeps</h4>
+          <p>A JavaScript colony sandbox, run three ways at once: the public ladder (main +
+          seasonal), and two private servers &mdash; a decoupled sandbox for aggressive
+          experiments and a disposable "lab" purpose-built to manufacture starvation events for
+          hazard-readout training. This is where nearly every mechanism above was invented and
+          then broken on purpose: spawn deadlocks, a wall-repair magnet that starved an economy,
+          gradient pole-lock in two separate readouts, an on-policy spawn arbiter that failed
+          and was rebuilt floor-protected.</p>
+          <span class="stat">prequential forecast accuracy on a live colony: <b>87.9%</b></span>
+        </div>
+
+        <div class="world-card live">
+          <span class="tag">Ported &middot; Schema 7, final era</span>
+          <h4>Timberborn</h4>
+          <p>NeuroCore's first port into a compiled, closed commercial game, reached through a
+          mod &mdash; brain (netstandard2.1, zero game references) and body (the mod's own
+          domain retina) kept deliberately separate, with JS&harr;C&#35; bit-parity proven in
+          tests before any new capability was trusted. Seven schema eras later, the geometry is
+          declared final: four parallel forecast targets (hazard, brownout, population decline,
+          storage overflow), a paged binary persistence format replacing a growing JSON file, and
+          a read-only tool that queries the memory directly instead of parsing a telemetry log
+          &mdash; the first working rung of "read the hyperspace as context."</p>
+          <span class="stat">status: shadow observer, <b>no game control yet</b></span>
+        </div>
+
+        <div class="world-card target">
+          <span class="tag">Target &middot; vision-first</span>
+          <h4>Minecraft</h4>
+          <p>The point the whole arc has been pointed at: an embodied agent that navigates and
+          acts &mdash; crafting and mining included &mdash; not a shadow forever. The deliberate
+          departure from the first two worlds: perception stops reading the game's internal
+          state and starts looking at the rendered screen instead, the same view a human player
+          gets. A vision-language bridge translates pixels to semantic tokens; those tokens feed
+          the same proven HDC/LNN/Vault substrate as any other retina. Hands &mdash; an actual
+          action channel &mdash; are on the roadmap, deliberately not yet decided.</p>
+          <span class="stat">perception: <b>MineCLIP</b> + a local vision-language bridge</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <span class="num-eyebrow">04 &mdash; The Support Stack</span>
+      <h2>The toolchain behind the toolchain</h2>
+      <div class="prose">
+        <p class="lede">A project run this deliberately needs its own infrastructure &mdash;
+        hardware tuned for the dual load, and agent pipelines that build and audit the mod code
+        the same way the doctrine demands the brain itself be measured.</p>
+      </div>
+
+      <div class="stack-list">
+        <div class="stack-item">
+          <span class="name">Project Jarod</span>
+          <p>The bare-metal substrate: an RTX 4080 stripped to display/render cores only, zero
+          telemetry, bypassing CUDA/cuDNN/PyTorch entirely in favor of TinyGrad compiled straight
+          to PTX &mdash; a dual workload that has to serve real-time gaming and AI compute without
+          either cannibalizing the other.</p>
+        </div>
+        <div class="stack-item">
+          <span class="name">/triad</span>
+          <p>A three-tier build pipeline for the Timberborn C&#35; work: one model researches and
+          plans, a second writes and self-tests the code, a third audits the real diff against
+          the plan and the doctrine &mdash; looping fixes back until it earns a clean pass. Every
+          Schema-7 round shipped this way, audited before a single line was deployed.</p>
+        </div>
+        <div class="stack-item">
+          <span class="name">Foreman</span>
+          <p>The local orchestrator, running entirely on Project Jarod's hardware: a resident
+          planner/coder model, a CPU-pinned gatekeeper that never touches VRAM, and vision and
+          summarization models swapped in only when actually needed &mdash; because a 16GB card
+          holds exactly one heavy model at a time, and the whole design bends around that fact.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <span class="num-eyebrow">05 &mdash; Where It's Going</span>
+      <h2>Open threads</h2>
+      <div class="prose">
+        <p class="lede">Nothing here is speculative architecture &mdash; each thread is a
+        specific, already-scoped next step.</p>
+      </div>
+      <div class="roadmap">
+        <div class="roadmap-item next">
+          <span class="dot"></span>
+          <p><b>Vision-stack bench.</b> Characterize the chosen bridge model's real VRAM
+          footprint, latency, and output stability; prototype the screen-capture path; design
+          the one genuinely new encoder step this port needs &mdash; discretizing a continuous
+          embedding into HDC-bucketable tokens.</p>
+        </div>
+        <div class="roadmap-item">
+          <span class="dot"></span>
+          <p><b>Temporal planning, the correct way.</b> Not new binding math &mdash; the existing
+          state&rarr;next-state predictor, chained against itself for N-ply lookahead, shadow-
+          scored against a naive baseline exactly like every other predictor here before it earns
+          any authority.</p>
+        </div>
+        <div class="roadmap-item">
+          <span class="dot"></span>
+          <p><b>Hands, deliberately deferred.</b> Direct input injection versus a bot-API actuator
+          &mdash; an open fork, on the roadmap, not yet decided, because perception had to be
+          proven first.</p>
+        </div>
+        <div class="roadmap-item">
+          <span class="dot"></span>
+          <p><b>Procedural, seed-loaded vectors.</b> If a state's atomic and encoded vectors are
+          pure functions of their labels, they never need to be stored &mdash; only the
+          consolidated, learned residue does. A dimension-slicing generator would make capacity
+          effectively unbounded, paid for in CPU instead of memory. Worth it once vision pushes
+          the dimensionality high; not worth it in any hot path today.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="closing">
+      <p>The brain does not change when the body does. That is the whole argument &mdash; and
+      the reason a colony of beavers, a hive of Screeps creeps, and, eventually, a single player
+      named Steve can all be taught by the same mind, one honestly-measured retina at a time.</p>
+      <div class="sig">NeuroCore &middot; HDC &#43; LNN &#43; VSA &middot; Screeps &rarr; Timberborn &rarr; Minecraft</div>
+    </div>
+  </main>
+</div>
