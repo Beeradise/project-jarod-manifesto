@@ -16,14 +16,14 @@ separately snapshotted; F2/F3 have no distinct surviving marker.
 
 ---
 
-## Current state (2026-07-12, after F10)
+## Current state (2026-07-12, after F12)
 
 | thing | value |
 |---|---|
 | Graded space `D_g` | 131072 int8 (read-write, all decisions) |
 | Binary space `D_b` | 16384 (page-format derivation only, 8:1 fold — never a decision input) |
 | Schema versions | pages `STORE_VERSION=4`, `GANGLIA_VERSION=8`, `ENCODER_VERSION=1` |
-| Channels | `telemetry` (default), `chat`, `content` — routing/decay/coalesce never cross; cap 64/channel |
+| Channels | `telemetry` (default), `chat`, `content` — routing/decay/coalesce never cross; hard cap 128/channel |
 | Decision statistic | `graded_z = dot / sqrt(var)`; null ~N(0,1) (max ~3.7 over unrelated pairs) |
 | Routing bands | `z < seed_z_bar` → **SEED**; `seed_z_bar ≤ z < join` → **HOOK**; `z ≥ join` → **JOIN** |
 | Seed bar | `46 + 19·openness` (`Z_BAR_TIGHT=46`, `Z_BAR_LOOSE=65`), oscillator-driven |
@@ -32,6 +32,7 @@ separately snapshotted; F2/F3 have no distinct surviving marker.
 | Hooks | `HOOKS_MAX=6`, reinforce nearest at `HOOK_TIGHT_Z=90` |
 | Dominance cap | `DOMINANCE_FRAC=0.4` past `DOMINANCE_MIN_MASS=12` → JOIN diverts to hook |
 | Evidence death | floor `E_FLOOR=0.05` (n>1), `0.2` (singleton); decay 0.999/event, 0.99/sleep |
+| Fill maturation (F12) | `fill=(templates+hooks)/128`; ≤`FILL_PRUNE_ONSET=0.65` build (no-op); above → seed bar tightens (`GATE_TIGHTEN_MAX=0.7`, floor `SEED_FLOOR_Z=18`), death floor ramps→`PRUNE_FLOOR_MAX=1.5`, hooks 6→`HOOKS_MIN=2` |
 | Feedback | good `e+2.0`, bad `e×0.25`, gate `FEEDBACK_MIN_Z=55` (= recall floor) |
 | Encoder | BEAGLE composite: semantic `sign(R·(embed−mu))` (nomic-embed-text 768-d, R seed `0xF9BEA61E`, mu from `BASELINE_WORDS`) + order bigrams + formation char-trigrams, `W=1/1/1` |
 | Viscoelastic | stress EMA `α=0.2`, onset `T0=0.35`, `ETA_MAX=0.875` (yield floor 0.125), sleep recovery ×0.5 |
@@ -44,6 +45,50 @@ iterator library), `hdc_map.py` (heatmaps), `f10_dissolve_content.py`, `test_hdc
 `embed_cache.npz`, `beagle_proj.npy` (regenerable from seed).
 
 ---
+
+## 2026-07-12 — F12: Fill-based maturation (build → synaptic-prune) + chat loaded
+
+Operator directive: the novelty stack should be an **actual gateway that ramps**, and pruning
+should follow a **fill threshold that simulates human aging** — overproduce templates+hooks
+first, then prune hard once "grown up" (~age 20–25). Fill is the age proxy (no wall-clock in an
+HDC). Layered on top of the **frozen** oscillator — router + `sleep` only.
+
+- **Fill = maturity.** Per channel, `fill = (templates + hooks) / FILL_SOFT_CAP` (`128`). Hard
+  cap raised 64 → 128 for the build runway; fill-pruning does the real work below it.
+- **Gateway ramps with fill.** Below `FILL_PRUNE_ONSET=0.65` the seed bar is unchanged (build
+  freely). Above it the effective bar tightens (`× (1 − GATE_TIGHTEN_MAX·maturity)`,
+  `GATE_TIGHTEN_MAX=0.7`), floored at `SEED_FLOOR_Z=18` so a genuinely orthogonal event always
+  seeds — learning never fully stops; pruning makes the room.
+- **Pruning: threshold-triggered, then high-rate.** Below onset the death floor is the pre-F12
+  floor (gentle). Above onset it ramps `E_FLOOR → PRUNE_FLOOR_MAX=1.5` with maturity, culling
+  weak/unreinforced templates; hooks trim too (`HOOKS_MAX 6 → HOOKS_MIN 2`).
+- **Chat loaded.** `cmd_chat` now pushes the **full exchange** through the same novelty routing
+  (`_ingest_chunks`, chat channel) instead of a truncated JSON blob — the store carries the
+  conversational context the models have.
+- **Non-regression by design:** every ramp is a no-op at `maturity 0` (fill ≤ onset), so a fresh
+  store and the whole low-fill test suite behave byte-identically to pre-F12 (proven).
+- Verified (`sim_f12.py`): ramp table (seed bar 60→18, death floor 0.20→1.50, hooks 6→2 across
+  fill) and a real `sleep()` trajectory — builds freely to ~83, then prunes to a ~82–96 equilibrium.
+- Knobs are constants at the top of `hdc_core` (`FILL_SOFT_CAP`, `FILL_PRUNE_ONSET`, +4), not yet
+  config-lifted. Separate from `/bad`: this culls weak/unused, `/bad` kills wrong.
+
+## 2026-07-12 — Full wipe + auto-ingest (no `/learn`)
+
+Operator directive: start the HDC completely fresh, and make fed information enter through the
+novelty routing automatically — no command.
+
+- **Full wipe.** Deleted `ganglia.npz` + all 201 episodic pages. Kept the F9 encoder machinery
+  (`beagle_proj.npy`, `embed_cache.npz`, `encoder.npz` — machinery, not memories). Store is now
+  0 templates / 0 pages. Safety copy: `rollback\fullwipe-20260712-133726\`.
+- **Auto-ingest.** `foreman.py` gained `auto_ingest_findings(run_dir, results)`, called in
+  `cmd_run` before the end-of-run sleep. A run's **gatekeeper-passed** findings are chunked with
+  the same `/learn` chunker (`rebuild_memory.chunks_of` / `_texty`) and pushed through
+  `store_text(chunk, channel="content")` — i.e. the **same novelty/comparison routing** (seed if
+  novel, join/hook if redundant). Researching now populates memory with no `/learn` command.
+- Config `auto_ingest_content` (default `true`) disables/scopes it. Gatekeeper-flagged artifacts
+  are skipped (don't memorize rejected output). Covers `foreman run`; chat wired later (F12).
+- Verified isolated: rose×2 + quantum passed, flagged skipped → content 2 ganglia (rose n=2
+  absorbed the redundant copy; quantum distinct), roses retrievable at z=68.
 
 ## 2026-07-12 — F10: Hooks restored + dominance cap + content dissolved
 
