@@ -9,3 +9,8 @@ Pages → deploy from `main` branch, root) to host it at a public URL.
 This is a living document — Claude is a named collaborator per its own knowledge-integrity
 doctrine (§02): every claim is verified, estimated, or flagged unknown, never filled in with
 plausible-sounding fluff.
+
+## License
+
+This project is open-source and available under the [MIT License](https://opensource.org/licenses/MIT). 
+Copyright (c) 2026 Beeradise.
